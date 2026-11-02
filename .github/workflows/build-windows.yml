@@ -2,6 +2,12 @@ name: Build EngPlot for Windows
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -19,19 +25,21 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install PySide6 pyinstaller
+          pip install -r requirements.txt
+          pip install pyinstaller
 
-      - name: Check application files
+      - name: Check application source
         shell: pwsh
         run: |
           if (!(Test-Path "main.py")) {
-            throw "main.py is missing from the repository"
+            throw "File main.py was not found"
           }
 
-      - name: Build EngPlot
-        run: pyinstaller --noconfirm --windowed --onedir --name EngPlot main.py
+      - name: Build application
+        run: pyinstaller --noconfirm --clean --windowed --onedir --name EngPlot main.py
 
       - name: Package application
+        shell: pwsh
         run: Compress-Archive -Path dist/EngPlot -DestinationPath EngPlot-Windows.zip
 
       - name: Upload application
@@ -40,3 +48,4 @@ jobs:
           name: EngPlot-Windows
           path: EngPlot-Windows.zip
           if-no-files-found: error
+          retention-days: 14
